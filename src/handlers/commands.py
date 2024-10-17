@@ -2,24 +2,12 @@ from aiogram import types, Router, F
 from aiogram.filters import Command
 from aiogram.types import InlineKeyboardMarkup, InlineKeyboardButton
 from bson import ObjectId
+import json
 
 from src.database.db_connection import db
+from src.database.db_operations import add_reminder
 
 command_router = Router(name=__name__)
-
-
-def create_menu():
-    # Create inline buttons
-    buttons = [
-        [InlineKeyboardButton(text="Low", callback_data="option_1")],
-        [InlineKeyboardButton(text="Medium", callback_data="option_2")],
-        [InlineKeyboardButton(text="High", callback_data="option_3")]
-    ]
-
-    # Create the markup with the buttons
-    keyboard = InlineKeyboardMarkup(inline_keyboard=buttons)
-
-    return keyboard
 
 
 ########################################
@@ -28,16 +16,22 @@ def create_menu():
 
 @command_router.message(Command('start'))
 async def send_welcome(message: types.Message):
+    await message.reply("Stay organized with me! Just drop a message in the chat and I will sort it out for you!")
+
+
+@command_router.message(Command('list'))
+async def send_list(message: types.Message):
     reminder_collection = db["reminders"]
     reminders = await reminder_collection.find().to_list(length=None)
 
-    print(reminders)
+    if not reminders:
+        await message.answer("No tasks available.")
+        return
 
     for reminder in reminders:
-        print(type(reminder))
-        await message.reply(f"Hello! Welcome to the bot. Here are your reminders: {reminder}")
+        await message.answer(f"{reminder}")
 
-    await message.answer("Please enter your task:")
+    # TODO: add menu after listing all the messages to choose whether user wants to manage them or not
 
 
 @command_router.message(Command("manage"))
@@ -82,6 +76,20 @@ async def edit_task(callback_query: types.CallbackQuery):
 
 # _____________________________________________________________________________
 
+def create_menu(user_id, chat_id, message):
+    # Create inline buttons
+    buttons = [
+        [InlineKeyboardButton(text="Low", callback_data=f"option_1,{user_id},{chat_id},{message}")],
+        [InlineKeyboardButton(text="Medium", callback_data=f"option_2,{user_id},{chat_id},{message}")],
+        [InlineKeyboardButton(text="High", callback_data=f"option_3,{user_id},{chat_id},{message}")]
+    ]
+
+    # Create the markup with the buttons
+    keyboard = InlineKeyboardMarkup(inline_keyboard=buttons)
+
+    return keyboard
+
+
 @command_router.message(F.text)
 async def handle_user_input(message: types.Message):
     user_input = message.text
@@ -89,31 +97,42 @@ async def handle_user_input(message: types.Message):
     # Optionally store or process the user's input here
     print(f"User entered: {user_input}")
 
+    user_input = message.text
+    user_id = message.from_user.id
+    chat_id = message.chat.id
+
     # After user input, display the inline menu
-    await message.answer("Choose one of the following priorities:", reply_markup=create_menu())
+    await message.answer("Choose one of the following priorities:",
+                         reply_markup=create_menu(user_id, chat_id, user_input))
 
 
 # Handle the user's selection from the menu
 @command_router.callback_query(lambda c: c.data.startswith("option_"))
 async def process_menu_selection(callback_query: types.CallbackQuery):
-    selected_option = callback_query.data
+    selected_option, user_id, chat_id, task_message = callback_query.data.split(',')
 
+    print(selected_option, user_id, chat_id, task_message)
+
+    priority = 0
     # Process the user's selection
     if selected_option == "option_1":
         await callback_query.message.answer("You selected Low Priority")
-        # Add record to the database
+        priority = 0
     elif selected_option == "option_2":
         await callback_query.message.answer("You selected Medium Priority")
-        # Add record to the database
+        priority = 1
     elif selected_option == "option_3":
         await callback_query.message.answer("You selected High Priority")
-        # Add record to the database
+        priority = 2
 
     # Remove the inline keyboard (menu)
     await callback_query.message.edit_reply_markup(reply_markup=None)
 
     # Acknowledge the user's selection and clear the inline buttons
     await callback_query.answer()
+
+    # Uploads record to the collection into our DB
+    await add_reminder(int(user_id), int(chat_id), task_message, int(priority))
 
     # Now the bot can continue to await further text input from the user
     await callback_query.message.answer("Your task was uploaded to the DB")
