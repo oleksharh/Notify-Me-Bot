@@ -1,6 +1,6 @@
-from aiogram import types
-from src.bot import dp
+from aiogram import types, Router
 
-@dp.message_handler()
+message_router = Router(name=__name__)
+@message_router.message()
 async def echo_message(message: types.Message):
     await message.answer(message.text)

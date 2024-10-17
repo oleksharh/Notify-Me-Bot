@@ -1,11 +1,12 @@
 from aiogram import types, Router
 from aiogram.filters import Command
-
+from src.database.db_connection import db
 command_router = Router(name=__name__)
 @command_router.message(Command('start'))
 async def send_welcome(message: types.Message):
-    await message.reply("Hello! Welcome to the bot.")
+    reminder_collection = db["reminders"]
+    reminders = await reminder_collection.find().to_list(length=None)
 
-@command_router.message(Command('help'))
-async def send_help(message: types.Message):
-    await message.reply("Available commands:\n/start - Welcome message\n/help - Show available commands")
+    print(reminders)
+
+    await message.reply(f"Hello! Welcome to the bot. Here are your reminders: {reminders}")

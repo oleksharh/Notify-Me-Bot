@@ -20,4 +20,5 @@ bot = Bot(token=API_TOKEN)
 dp = Dispatcher()
 
 from handlers.commands import command_router
-dp.include_router(command_router)
+from handlers.messages import message_router
+dp.include_routers(command_router, message_router)
