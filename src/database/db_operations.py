@@ -1,6 +1,12 @@
-from .db_connection import db  # Import the database instance
+from .db_connection import db
 from datetime import datetime
-
+from bson import ObjectId
+async def get_reminders():
+    reminder_collection = db["reminders"]
+    return await reminder_collection.find().to_list(length=None)
+async def get_reminder_by_id(task_id):
+    reminder_collection = db["reminders"]
+    return await reminder_collection.find_one({"_id": ObjectId(task_id)})
 async def add_reminder(user_id: int, chat_id: int, message: str, priority: int):
     reminder_collection = db["reminders"]
 
