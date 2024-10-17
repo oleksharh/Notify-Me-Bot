@@ -11,6 +11,7 @@ logging.basicConfig(level=logging.INFO)
 
 # Fetch the API token from environment variables
 API_TOKEN = os.getenv("API_TOKEN")
+
 if not API_TOKEN:
     raise ValueError("No API token found. Please add your bot token to .env.local.")
 
