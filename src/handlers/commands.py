@@ -16,16 +16,31 @@ async def send_welcome(message: types.Message):
 @command_router.message(Command('list'))
 async def send_list(message: types.Message):
     reminders = await get_reminders()
+    tasks = []
 
     if not reminders:
         await message.answer("No tasks available.")
         return
 
-    for reminder in reminders:
-        await message.answer(f"{reminder}")
+    for index, reminder in enumerate(reminders):
+        taskObject = {
+            "task_id": index + 1,
+            "task_message": reminder['message'],
+            "priority": reminder['priority'],
+            "timestamp": reminder['timestamp'].strftime('%Y-%m-%d %H:%M:%S')
+        }
+        tasks.append(taskObject)
 
-    # TODO: add menu after listing all the messages to choose whether user wants to manage them or not
+    tasks_str = "\n\n".join(
+        [
+            f"⚫️ Task ID: {task['task_id']}\n"
+            f"📝 Task: {task['task_message']}\n"
+            f"⭐️ Priority: {task['priority']}\n"
+            f"🕒 Timestamp: {task['timestamp']}"
+            for task in tasks]
+    )
 
+    await message.answer("Your tasks are: \n\n" + tasks_str)
 
 @command_router.message(Command("manage"))
 async def manage_menu(message: types.Message):
