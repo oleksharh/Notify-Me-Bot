@@ -3,7 +3,7 @@ import motor.motor_asyncio
 from dotenv import load_dotenv
 import os
 
-load_dotenv('.env.local')
+load_dotenv(".env.local")
 
 DB_CONNECTION_STRING = os.getenv("DB_CONNECTION_STRING")
 

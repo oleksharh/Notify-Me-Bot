@@ -10,7 +10,14 @@ def create_priority_menu(user_id, chat_id, message):
 
 def create_edit_menu(reminders):
     buttons = [
-        [InlineKeyboardButton(text=f"Edit Task {reminder['name']}", callback_data=f"edit_{reminder['_id']}")]
+        [InlineKeyboardButton(text=f"Edit Task {reminder["message"]}", callback_data=f"edit_{reminder["_id"]}")]
         for reminder in reminders
+    ]
+    return InlineKeyboardMarkup(inline_keyboard=buttons)
+
+def create_manage_menu():
+    buttons = [
+        [InlineKeyboardButton(text=f"Back", callback_data=f"manage_back")],
+        [InlineKeyboardButton(text=f"Manage", callback_data=f"manage_manage")]
     ]
     return InlineKeyboardMarkup(inline_keyboard=buttons)
