@@ -4,7 +4,7 @@ from dotenv import load_dotenv
 import os
 
 # Load environment variables from .env.local
-load_dotenv('.env.local')
+load_dotenv(".env.local")
 
 # Initialize logging
 logging.basicConfig(level=logging.INFO)

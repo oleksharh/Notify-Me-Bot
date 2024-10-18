@@ -1,19 +1,19 @@
 from aiogram import types, Router, F
 from aiogram.filters import Command
 from src.database.db_operations import add_reminder, get_reminders, get_reminder_by_id
-from src.utils.keyboards import create_edit_menu, create_priority_menu
+from src.utils.keyboards import create_edit_menu, create_priority_menu, create_manage_menu
 
 command_router = Router(name=__name__)
 
 ########################################
-###          COMMAND HANDLERs        ###
+###          COMMAND HANDLERS        ###
 ########################################
 
-@command_router.message(Command('start'))
+@command_router.message(Command("start"))
 async def send_welcome(message: types.Message):
     await message.reply("Stay organized with me! Just drop a message in the chat and I will sort it out for you!")
 
-@command_router.message(Command('list'))
+@command_router.message(Command("list"))
 async def send_list(message: types.Message):
     reminders = await get_reminders()
     tasks = []
@@ -23,28 +23,41 @@ async def send_list(message: types.Message):
         return
 
     for index, reminder in enumerate(reminders):
-        taskObject = {
+        task_object = {
             "task_id": index + 1,
-            "task_message": reminder['message'],
-            "priority": reminder['priority'],
-            "timestamp": reminder['timestamp'].strftime('%Y-%m-%d %H:%M:%S')
+            "task_message": reminder["message"],
+            "priority": reminder["priority"],
         }
-        tasks.append(taskObject)
+        tasks.append(task_object)
 
     tasks_str = "\n\n".join(
         [
-            f"⚫️ Task ID: {task['task_id']}\n"
-            f"📝 Task: {task['task_message']}\n"
-            f"⭐️ Priority: {task['priority']}\n"
-            f"🕒 Timestamp: {task['timestamp']}"
+            f"⚫️ Task ID: {task["task_id"]}\n"
+            f"📝 Task: {task["task_message"]}\n"
+            f"⭐️ Priority: {task["priority"]}\n"
             for task in tasks]
     )
 
-    await message.answer("Your tasks are: \n\n" + tasks_str)
+    # await message.answer()
+    keyboard = create_manage_menu()
+    await message.answer(text="Your tasks are: \n\n" + tasks_str, reply_markup=keyboard)
+
+@command_router.callback_query(lambda c: c.data.startswith("manage_"))
+async def manage(callback_query: types.CallbackQuery):
+    function = callback_query.data.split("_")[-1]
+
+    if function == "manage":
+        await manage_menu(callback_query.message) # TODO: Check what argument needs to be passed here
+    else:
+        await callback_query.message.edit_reply_markup(reply_markup=None)
+
+    await callback_query.answer()
+
 
 @command_router.message(Command("manage"))
 async def manage_menu(message: types.Message):
     reminders = await get_reminders()
+
     if not reminders:
         await message.answer("No tasks available.")
         return
@@ -58,11 +71,14 @@ async def edit_task(callback_query: types.CallbackQuery):
     task = await get_reminder_by_id(task_id)
 
     if task:
-        await callback_query.message.answer(f"You selected: {task['name']}. Please enter the new task details:")
+        await callback_query.message.answer(f"You selected: {task["message"]}. Please enter the new task details:")
     else:
         await callback_query.message.answer("Task not found.")
 
+    await callback_query.message.edit_reply_markup(reply_markup=None)
     await callback_query.answer()
+
+
 @command_router.message(F.text)
 async def handle_user_input(message: types.Message):
     user_input = message.text
@@ -76,7 +92,7 @@ async def handle_user_input(message: types.Message):
 # Handle the user's selection from the menu
 @command_router.callback_query(lambda c: c.data.startswith("option_"))
 async def process_menu_selection(callback_query: types.CallbackQuery):
-    selected_option, user_id, chat_id, task_message = callback_query.data.split(',')
+    selected_option, user_id, chat_id, task_message = callback_query.data.split(",")
 
     priority = {
         "option_1": 0,
@@ -89,3 +105,4 @@ async def process_menu_selection(callback_query: types.CallbackQuery):
     await callback_query.message.edit_reply_markup(reply_markup=None)
     await callback_query.answer()
     await callback_query.message.answer("Your task was uploaded to the DB")
+
