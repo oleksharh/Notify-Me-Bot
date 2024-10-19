@@ -3,9 +3,9 @@ from datetime import datetime
 from bson import ObjectId
 
 
-async def get_reminders():
+async def get_reminders(user_id: int, chat_id: int):
     reminder_collection = db["reminders"]
-    return await reminder_collection.find().to_list(length=None)
+    return await reminder_collection.find({"user_id": user_id, "chat_id": chat_id}).to_list(length=None)
 
 
 async def get_reminder_by_id(task_id):
@@ -13,7 +13,7 @@ async def get_reminder_by_id(task_id):
     return await reminder_collection.find_one({"_id": ObjectId(task_id)})
 
 
-async def add_reminder(user_id: int, chat_id: int, message: str, priority: int):
+async def add_reminder(user_id: int, chat_id: int, message: str, priority: int) -> str:
     reminder_collection = db["reminders"]
 
     new_record = {
