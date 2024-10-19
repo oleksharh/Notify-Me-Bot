@@ -5,55 +5,64 @@ from src.utils.keyboards import create_edit_menu, create_priority_menu, create_m
 
 command_router = Router(name=__name__)
 
+
 ########################################
 ###          COMMAND HANDLERS        ###
 ########################################
 
+# Welcome command handler function
 @command_router.message(Command("start"))
-async def send_welcome(message: types.Message):
-    await message.reply("Stay organized with me! Just drop a message in the chat and I will sort it out for you!")
+async def send_welcome(message: types.Message) -> None:
+    await message.reply("Stay organized with me! Just drop a message "
+                        "in the chat and I will sort it out for you!")
 
+
+# List All Tasks Command Handler
 @command_router.message(Command("list"))
-async def send_list(message: types.Message):
+async def send_list(message: types.Message) -> None:
     reminders = await get_reminders()
-    tasks = []
 
     if not reminders:
         await message.answer("No tasks available.")
         return
 
-    for index, reminder in enumerate(reminders):
-        task_object = {
-            "task_id": index + 1,
-            "task_message": reminder["message"],
-            "priority": reminder["priority"],
-        }
-        tasks.append(task_object)
-
-    tasks_str = "\n\n".join(
-        [
-            f"⚫️ Task ID: {task["task_id"]}\n"
-            f"📝 Task: {task["task_message"]}\n"
-            f"⭐️ Priority: {task["priority"]}\n"
-            for task in tasks]
-    )
-
-    # await message.answer()
+    tasks_str = format_task_list(reminders)
     keyboard = create_manage_menu()
+
     await message.answer(text="Your tasks are: \n\n" + tasks_str, reply_markup=keyboard)
 
+
+def format_task_list(reminders: list) -> str:
+    """
+    Helper function to format the task list string.
+    """
+    tasks = [
+        f"⚫️ Task ID: {index + 1}\n"
+        f"📝 Task: {reminder['message']}\n"
+        f"⭐️ Priority: {reminder['priority']}\n"
+        for index, reminder in enumerate(reminders)
+    ]
+    return "\n\n".join(tasks)
+
+
+# Manage Tasks Callback Query Handler
 @command_router.callback_query(lambda c: c.data.startswith("manage_"))
 async def manage(callback_query: types.CallbackQuery):
     function = callback_query.data.split("_")[-1]
 
+    # Remove inline keyboard after selection
+    await callback_query.message.edit_reply_markup(reply_markup=None)
+
     if function == "manage":
-        await manage_menu(callback_query.message) # TODO: Check what argument needs to be passed here
+        await manage_menu(callback_query.message)
     else:
-        await callback_query.message.edit_reply_markup(reply_markup=None)
+        await callback_query.message.answer("You are back in the main menu!\n"
+                                            "Please enter your next task.")
 
     await callback_query.answer()
 
 
+# Manage Menu Command Handler
 @command_router.message(Command("manage"))
 async def manage_menu(message: types.Message):
     reminders = await get_reminders()
@@ -65,20 +74,24 @@ async def manage_menu(message: types.Message):
     keyboard = create_edit_menu(reminders)
     await message.answer("Here are your tasks. Choose one to edit:", reply_markup=keyboard)
 
+
 @command_router.callback_query(lambda c: c.data.startswith("edit_"))
 async def edit_task(callback_query: types.CallbackQuery):
     task_id = callback_query.data.split("_")[1]
     task = await get_reminder_by_id(task_id)
 
+    await callback_query.message.delete()
+
     if task:
-        await callback_query.message.answer(f"You selected: {task["message"]}. Please enter the new task details:")
+        await callback_query.message.answer(f"You selected: {task["message"]}.")
+        await callback_query.message.answer("Please enter the new task details.")
     else:
         await callback_query.message.answer("Task not found.")
 
-    await callback_query.message.edit_reply_markup(reply_markup=None)
     await callback_query.answer()
 
 
+# Handle User Text Input
 @command_router.message(F.text)
 async def handle_user_input(message: types.Message):
     user_input = message.text
@@ -89,20 +102,30 @@ async def handle_user_input(message: types.Message):
     await message.answer("Choose one of the following priorities:",
                          reply_markup=create_priority_menu(user_id, chat_id, user_input))
 
-# Handle the user's selection from the menu
+
+# Handle Priority Menu Selection
 @command_router.callback_query(lambda c: c.data.startswith("option_"))
 async def process_menu_selection(callback_query: types.CallbackQuery):
     selected_option, user_id, chat_id, task_message = callback_query.data.split(",")
 
-    priority = {
-        "option_1": 0,
-        "option_2": 1,
-        "option_3": 2
-    }.get(selected_option, 0)
+    # Remove the message after it's been handled
+    await callback_query.message.delete()
 
-    # Uploads record to the collection into our DB
+    priority = get_priority_from_option(selected_option)
+
+    # Upload task to the database
     await add_reminder(int(user_id), int(chat_id), task_message, int(priority))
-    await callback_query.message.edit_reply_markup(reply_markup=None)
+
     await callback_query.answer()
     await callback_query.message.answer("Your task was uploaded to the DB")
 
+
+def get_priority_from_option(option: str) -> int:
+    """
+    Helper function to map option strings to priority values.
+    """
+    return {
+        "option_1": 0,  # Low priority
+        "option_2": 1,  # Medium priority
+        "option_3": 2  # High priority
+    }.get(option, 2)  # Default to High priority if unrecognized
