@@ -3,7 +3,7 @@ from aiogram.filters import Command
 from src.database.db_operations import add_reminder, get_reminders, get_reminder_by_id
 from src.utils.keyboards import create_edit_menu, create_priority_menu, create_manage_menu
 
-command_router = Router(name=__name__)
+command_router = Router(name="command_router")
 
 
 ########################################
