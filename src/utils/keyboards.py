@@ -53,3 +53,5 @@ def create_status_manage_menu(task_id: str | ObjectId):
         [InlineKeyboardButton(text=f"Not Finished", callback_data=f"status_false_{task_id}")],
         [InlineKeyboardButton(text=f"Finished", callback_data=f"status_true_{task_id}")],
     ]
+
+    return InlineKeyboardMarkup(inline_keyboard=buttons)
