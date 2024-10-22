@@ -9,6 +9,8 @@ from src.utils.keyboards import create_manage_menu, create_priority_menu, create
 
 command_router = Router(name="command_router")
 
+# TODO: Add enum to priority and status attributes of a table
+
 
 ########################################
 ###          COMMAND HANDLERS        ###
@@ -118,29 +120,44 @@ async def edit_menu(message: types.Message, task_id: str | ObjectId):
 
 
 def change_status(message: types.Message, task_id: str | ObjectId, status: bool):
-
-    update_task_status(task_id, status)
+    """
+    TODO: NEEDS implementation
+    TODO: Should be callback function
+    """
+    pass
 
 
 def change_priority(message: types.Message, task_id: str | ObjectId, priority: int):
+    """
+    TODO: NEEDS implementation
+    TODO: Should be callback function
+    """
     pass
+
+
+async def status_manage_menu(message: types.Message, task_id: str | ObjectId):
+    keyboard = create_status_manage_menu(task_id)
+    await message.answer(text="Choose wanted status",reply_markup=keyboard)
+
+
+async def priority_manage_menu(message: types.Message, task_id: str | ObjectId):
+    keyboard = create_priority_manage_menu(task_id)
+    await message.answer(text="Choose wanted priority", reply_markup=keyboard)
+
 
 
 @command_router.callback_query(lambda c: c.data.startswith("edit_"))
 async def edit_task(callback_query: types.CallbackQuery):
+    print(callback_query.data)
     function = callback_query.data.split("_")[1]
     task_id = callback_query.data.split("_")[2]
 
     await callback_query.message.delete()
 
     if function == "priority":
-        keyboard = create_priority_manage_menu(task_id)
-        await callback_query.message.edit_reply_markup(text="Choose wanted priority",reply_markup=None)
-        change_priority(callback_query.message, task_id, 0)
+        await priority_manage_menu(callback_query.message, task_id)
     elif function == "status":
-        keyboard = create_status_manage_menu(task_id)
-        await callback_query.message.edit_reply_markup(reply_markup=None)
-        # change_status(task_id,)
+        await status_manage_menu(callback_query.message, task_id)
     else:
         await callback_query.message.answer("Mistake has occurred, check callback_data\n")
 
