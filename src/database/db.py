@@ -4,6 +4,7 @@ from src.config import MONGODB_URI, DATABASE_NAME
 from bson import ObjectId
 from datetime import datetime
 
+# TODO: Add indexing on the most common attribute look up
 
 class Database:
     def __init__(self):
