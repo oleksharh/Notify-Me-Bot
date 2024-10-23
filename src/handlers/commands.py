@@ -181,7 +181,7 @@ async def process_menu_selection(callback_query: types.CallbackQuery):
     priority = get_priority_from_option(selected_option)
 
     # Upload task to the database
-    await db.add_reminder(int(user_id), int(chat_id), task_message, priority.value)
+    await db.add_reminder(int(user_id), int(chat_id), task_message, priority)
 
     await callback_query.answer()
     await callback_query.message.answer("Your task was uploaded to the DB")
