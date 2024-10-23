@@ -6,6 +6,10 @@ from src.utils.keyboards import MenuCreator
 from enum import Enum
 
 
+# TODO: generalize these status_manage_menu, delete_task_request_menu, priority_manage_menu into one callback_function
+# TODO: add error handling, especially in get_reminders, update_task_status, add_reminder
+
+
 class Priority(Enum):
     LOW = 0
     MEDIUM = 1
@@ -18,13 +22,11 @@ creator = MenuCreator()
 command_router = Router(name="command_router")
 
 
-# TODO: Add enum to status attributes of the table
-
 # Welcome command handler function
 @command_router.message(Command("start"))
 async def send_welcome(message: types.Message) -> None:
     await message.reply("Stay organized with me! Just drop a message in the chat and I will sort it out for you!")
-
+# unnecessary
 
 # List All Tasks Command Handler
 @command_router.message(Command("list"))
@@ -108,7 +110,7 @@ async def edit_task(callback_query: types.CallbackQuery):
     task = await db.get_reminder_by_id(task_id)
 
     if task:
-        await callback_query.message.answer(f"You selected: {task['message']}. {type(task['_id'])}")
+        await callback_query.message.answer(f"You selected: {task['message']}.")
         await edit_menu(callback_query.message, task["_id"])
     else:
         await callback_query.message.answer("Task not found.")
@@ -133,10 +135,16 @@ async def change_status(callback_query: types.CallbackQuery):
 
     await callback_query.message.delete()
 
+    if status == bool(db.get_task_status(task_id)):
+        await callback_query.message.answer(f"Task already in this status!\n")
+        return
+
     result = await db.update_task_status(task_id, status)
     if result:
         await callback_query.message.answer("Task has been updated.")
         await delete_task_request_menu(callback_query.message, task_id)
+
+    await callback_query.answer()
 
 
 async def delete_task_request_menu(message: types.Message, task_id: str | ObjectId):
