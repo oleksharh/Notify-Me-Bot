@@ -3,8 +3,8 @@ import logging
 
 from aiogram import Bot, Dispatcher
 from config import BOT_TOKEN
-from database.db import Database
 from handlers.commands import command_router
+from src.database.db_connect import  connect_db, close_db, db
 from utils.scheduled_tasks import ScheduledTasks
 
 # Configure logging
@@ -14,8 +14,7 @@ async def main():
     bot = Bot(token=BOT_TOKEN)
     dp = Dispatcher()
 
-    db = Database()
-    await db.connect()
+    await connect_db()
 
     tasks = ScheduledTasks(db, bot)
     dp["scheduled_tasks"] = tasks
@@ -31,7 +30,7 @@ async def main():
         logging.info("Shutting down...")
         await dp.storage.close()
         await bot.session.close()
-        await db.close()
+        await close_db()
         logging.info("Shutdown complete")
 
 if __name__ == '__main__':

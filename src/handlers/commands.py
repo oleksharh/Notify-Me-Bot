@@ -3,8 +3,9 @@ from aiogram.filters import Command
 from bson import ObjectId
 # from src.database.db_operations import add_reminder, get_reminders, get_reminder_by_id, remove_reminder, \
 #     update_task_status
-# from src.utils.keyboards import create_manage_menu, create_priority_menu, create_list_menu, create_edit_menu, \
-#     create_priority_manage_menu, create_status_manage_menu
+from src.database.db_connect import db
+from src.utils.keyboards import create_manage_menu, create_priority_menu, create_list_menu, create_edit_menu, \
+    create_priority_manage_menu, create_status_manage_menu
 
 command_router = Router(name="command_router")
 
@@ -16,36 +17,36 @@ async def send_welcome(message: types.Message) -> None:
     await message.reply("Stay organized with me! Just drop a message in the chat and I will sort it out for you!")
 
 # List All Tasks Command Handler
-# @command_router.message(Command("list"))
-# async def send_list(message: types.Message) -> None:
-#     user_id = message.from_user.id
-#     chat_id = message.chat.id
-#
-#     reminders = await Operations.get_reminders(user_id, chat_id)
-#
-#     if not reminders:
-#         await message.answer("You are all set, all tasks are finished!")
-#         return
-#
-#     tasks_str = format_task_list(reminders)
-#     keyboard = create_list_menu()
-#
-#     await message.answer(text="Your tasks are: \n\n" + tasks_str, reply_markup=keyboard)
-#
-#
-# def format_task_list(reminders: list) -> str:
-#     """
-#     Helper function to format the task list string.
-#     """
-#     priority_map = {0: "Low", 1: "Medium", 2: "High"}
-#
-#     tasks = [
-#         f"⚫️ Task ID: {index + 1}\n"
-#         f"📝 Task: {reminder['message']}\n"
-#         f"⭐️ Priority: {priority_map.get(reminder['priority'], "Unknown")}\n"
-#         for index, reminder in enumerate(reminders)
-#     ]
-#     return "\n\n".join(tasks)
+@command_router.message(Command("list"))
+async def send_list(message: types.Message) -> None:
+    user_id = message.from_user.id
+    chat_id = message.chat.id
+
+    reminders = await db.get_reminders(user_id, chat_id)
+
+    if not reminders:
+        await message.answer("You are all set, all tasks are finished!")
+        return
+
+    tasks_str = format_task_list(reminders)
+    keyboard = create_list_menu()
+
+    await message.answer(text="Your tasks are: \n\n" + tasks_str, reply_markup=keyboard)
+
+
+def format_task_list(reminders: list) -> str:
+    """
+    Helper function to format the task list string.
+    """
+    priority_map = {0: "Low", 1: "Medium", 2: "High"}
+
+    tasks = [
+        f"⚫️ Task ID: {index + 1}\n"
+        f"📝 Task: {reminder['message']}\n"
+        f"⭐️ Priority: {priority_map.get(reminder['priority'], "Unknown")}\n"
+        for index, reminder in enumerate(reminders)
+    ]
+    return "\n\n".join(tasks)
 #
 #
 # # Manage Tasks Callback Query Handler
