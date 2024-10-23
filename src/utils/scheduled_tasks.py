@@ -11,4 +11,5 @@ class ScheduledTasks:
 
     @staticmethod
     def setup_tasks():
+        # @aiocron.crontab('* * * * * */10')
         pass
