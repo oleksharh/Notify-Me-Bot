@@ -2,56 +2,72 @@ from aiogram.types import InlineKeyboardMarkup, InlineKeyboardButton
 from bson import ObjectId
 
 
-def create_priority_menu(user_id, chat_id, message):
-    buttons = [
-        [InlineKeyboardButton(text="Low", callback_data=f"option_1,{user_id},{chat_id},{message}")],
-        [InlineKeyboardButton(text="Medium", callback_data=f"option_2,{user_id},{chat_id},{message}")],
-        [InlineKeyboardButton(text="High", callback_data=f"option_3,{user_id},{chat_id},{message}")]
-    ]
-    return InlineKeyboardMarkup(inline_keyboard=buttons)
+class MenuCreator:
+    def __init__(self):
+        pass
 
+    @staticmethod
+    def create_buttons(options: list[tuple], callback_format: str) -> InlineKeyboardMarkup:
+        """
+        Generic function to create buttons from a list of options.
 
-def create_manage_menu(reminders):
-    buttons = [
-        [InlineKeyboardButton(text="🚪 Exit", callback_data="manage_exit")],
-        *[
-            [InlineKeyboardButton(text=f"Edit Task {reminder['message']}", callback_data=f"manage_{reminder['_id']}")]
-            for reminder in reminders
+        :param options: A list of tuples where each tuple contains (text, callback_identifier).
+        :param callback_format: The callback data format where the identifier will be inserted.
+        :return: InlineKeyboardMarkup with generated buttons.
+        """
+        buttons = [
+            [InlineKeyboardButton(text=text, callback_data=callback_format.format(callback_identifier))]
+            for text, callback_identifier in options
         ]
-    ]
-    return InlineKeyboardMarkup(inline_keyboard=buttons)
+        return InlineKeyboardMarkup(inline_keyboard=buttons)
 
+    @staticmethod
+    def priority_menu(user_id, chat_id, message):
+        options = [
+            ("Low", 1),
+            ("Medium", 2),
+            ("High", 3)
+        ]
+        callback_format = f"option_{{}}_{user_id}_{chat_id}_{message}"
+        return MenuCreator.create_buttons(options, callback_format)
 
-def create_list_menu():
-    buttons = [
-        [InlineKeyboardButton(text=f"Back", callback_data=f"list_back")],
-        [InlineKeyboardButton(text=f"Manage", callback_data=f"list_manage")]
-    ]
-    return InlineKeyboardMarkup(inline_keyboard=buttons)
+    @staticmethod
+    def manage_menu(reminders):
+        options = [("🚪 Exit", "exit")] + [(f"Edit Task {reminder['message']}", reminder['_id']) for reminder in
+                                          reminders]
+        callback_format = "manage_{}"
+        return MenuCreator.create_buttons(options, callback_format)
 
+    @staticmethod
+    def list_menu():
+        options = [("Back", "back"), ("Manage", "manage")]
+        callback_format = "list_{}"
+        return MenuCreator.create_buttons(options, callback_format)
 
-def create_edit_menu(task_id: str | ObjectId):
-    buttons = [
-        [InlineKeyboardButton(text=f"Manage Priority", callback_data=f"edit_priority_{task_id}")],
-        [InlineKeyboardButton(text=f"Set task as finished", callback_data=f"edit_status_{task_id}")],
-    ]
+    @staticmethod
+    def edit_menu(task_id: str | ObjectId):
+        options = [
+            ("Manage Priority", f"priority_{task_id}"),
+            ("Set task as finished", f"status_{task_id}")
+        ]
+        callback_format = "edit_{}"
+        return MenuCreator.create_buttons(options, callback_format)
 
-    return InlineKeyboardMarkup(inline_keyboard=buttons)
+    @staticmethod
+    def priority_manage_menu(task_id: str | ObjectId):
+        options = [
+            ("Low", 1),
+            ("Medium", 2),
+            ("High", 3)
+        ]
+        callback_format = f"priority_{{}}_{task_id}"
+        return MenuCreator.create_buttons(options, callback_format)
 
-
-def create_priority_manage_menu(task_id: str | ObjectId):
-    buttons = [
-        [InlineKeyboardButton(text=f"Low", callback_data=f"priority_1_{task_id}")],
-        [InlineKeyboardButton(text=f"Medium", callback_data=f"priority_2_{task_id}")],
-        [InlineKeyboardButton(text=f"High", callback_data=f"priority_3_{task_id}")]
-    ]
-
-    return InlineKeyboardMarkup(inline_keyboard=buttons)
-
-def create_status_manage_menu(task_id: str | ObjectId):
-    buttons = [
-        [InlineKeyboardButton(text=f"Not Finished", callback_data=f"status_false_{task_id}")],
-        [InlineKeyboardButton(text=f"Finished", callback_data=f"status_true_{task_id}")],
-    ]
-
-    return InlineKeyboardMarkup(inline_keyboard=buttons)
+    @staticmethod
+    def status_manage_menu(task_id: str | ObjectId):
+        options = [
+            ("Not Finished", "false"),
+            ("Finished", "true")
+        ]
+        callback_format = f"status_{{}}_{task_id}"
+        return MenuCreator.create_buttons(options, callback_format)
