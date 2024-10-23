@@ -21,11 +21,14 @@ class Database:
             self.client.close()
 
     # Operations
+    async def get_task_status(self, task_id: ObjectId | str) -> str:
+        return await self.reminders_collection.find_one({"_id": ObjectId()})
 
     async def get_all_reminders(self):
         return await self.reminders_collection.find().to_list(length=None)
 
     async def get_reminders(self, user_id: int, chat_id: int):
+        # TODO: return only usable in the functions attributes instead of the full record
         return await self.reminders_collection.find({"user_id": user_id, "chat_id": chat_id}).to_list(length=None)
 
     async def get_reminder_by_id(self, task_id: str | ObjectId):
