@@ -20,7 +20,7 @@ class Database:
         if self.client:
             self.client.close()
 
-    #Operations
+    # Operations
 
     async def get_all_reminders(self):
         return await self.reminders_collection.find().to_list(length=None)
@@ -49,15 +49,30 @@ class Database:
         await self.reminders_collection.delete_one({"_id": ObjectId(task_id)})
         return True
 
-    async def update_task_status(self, task_id: str | ObjectId, status: bool):
+    async def update_task_status(self, task_id: str | ObjectId, status: bool) -> bool:
         result = await self.reminders_collection.update_one(
             {"_id": ObjectId(task_id)},
             {"$set": {"status": status}}
         )
 
+        return self.check_if_updated(result)
+
+    async def delete_task(self, task_id: str | ObjectId) -> bool:
+        result = await self.reminders_collection.delete_one({"_id": ObjectId(task_id)})
+
+        return self.check_if_updated(result)
+
+    async def update_task_priority(self, task_id: str | ObjectId, priority: int) -> bool:
+        result = await self.reminders_collection.update_one(
+            {"_id": ObjectId(task_id)},
+            {"$set": {"priority": priority}}
+        )
+
+        return self.check_if_updated(result)
+
+    @staticmethod
+    def check_if_updated(result) -> bool:
         if result.matched_count == 1:
             return True
         else:
             return False
-
-

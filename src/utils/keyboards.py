@@ -28,7 +28,7 @@ class MenuCreator:
             ("Medium", 2),
             ("High", 3)
         ]
-        callback_format = f"option_{{}}_{user_id}_{chat_id}_{message}"
+        callback_format = f"option_{{}},{user_id},{chat_id},{message}"
         return MenuCreator.create_buttons(options, callback_format)
 
     @staticmethod
@@ -48,7 +48,7 @@ class MenuCreator:
     def edit_menu(task_id: str | ObjectId):
         options = [
             ("Manage Priority", f"priority_{task_id}"),
-            ("Set task as finished", f"status_{task_id}")
+            ("Set task status", f"status_{task_id}")
         ]
         callback_format = "edit_{}"
         return MenuCreator.create_buttons(options, callback_format)
@@ -56,9 +56,9 @@ class MenuCreator:
     @staticmethod
     def priority_manage_menu(task_id: str | ObjectId):
         options = [
-            ("Low", 1),
-            ("Medium", 2),
-            ("High", 3)
+            ("Low", 0),
+            ("Medium", 1),
+            ("High", 2)
         ]
         callback_format = f"priority_{{}}_{task_id}"
         return MenuCreator.create_buttons(options, callback_format)
@@ -70,4 +70,13 @@ class MenuCreator:
             ("Finished", "true")
         ]
         callback_format = f"status_{{}}_{task_id}"
+        return MenuCreator.create_buttons(options, callback_format)
+
+    @staticmethod
+    def delete_record_menu(task_id: str | ObjectId):
+        options = [
+            ("🚪 Exit to the menu", "exit"),
+            ("Delete Task", f"{task_id}"),
+        ]
+        callback_format = "delete_{}"
         return MenuCreator.create_buttons(options, callback_format)
