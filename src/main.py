@@ -1,15 +1,38 @@
 import asyncio
 import logging
-from bot import bot, dp
 
-async def main() -> None:
+from aiogram import Bot, Dispatcher
+from config import BOT_TOKEN
+from database.db import Database
+from handlers.commands import command_router
+from utils.scheduled_tasks import ScheduledTasks
+
+# Configure logging
+logging.basicConfig(level=logging.INFO)
+
+async def main():
+    bot = Bot(token=BOT_TOKEN)
+    dp = Dispatcher()
+
+    db = Database()
+    await db.connect()
+
+    tasks = ScheduledTasks(db, bot)
+    dp["scheduled_tasks"] = tasks
+
+    dp.include_router(command_router)
+
     try:
+        logging.info("Bot started")
         await dp.start_polling(bot)
     except Exception as e:
-        logging.error(f"Error occurred during polling: {e}")
+        logging.error(f"Critical error: {e}")
     finally:
+        logging.info("Shutting down...")
+        await dp.storage.close()
         await bot.session.close()
+        await db.close()
+        logging.info("Shutdown complete")
 
-
-if __name__ == "__main__":
+if __name__ == '__main__':
     asyncio.run(main())
