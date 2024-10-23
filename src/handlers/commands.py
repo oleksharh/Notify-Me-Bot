@@ -5,13 +5,18 @@ from src.database.db_connect import db
 from src.utils.keyboards import MenuCreator
 from enum import Enum
 
+
 class Priority(Enum):
     LOW = 0
     MEDIUM = 1
     HIGH = 2
 
+
+priority_map = {0: "Low", 1: "Medium", 2: "High"}
+
 creator = MenuCreator()
 command_router = Router(name="command_router")
+
 
 # TODO: Add enum to status attributes of the table
 
@@ -19,6 +24,7 @@ command_router = Router(name="command_router")
 @command_router.message(Command("start"))
 async def send_welcome(message: types.Message) -> None:
     await message.reply("Stay organized with me! Just drop a message in the chat and I will sort it out for you!")
+
 
 # List All Tasks Command Handler
 @command_router.message(Command("list"))
@@ -42,7 +48,7 @@ def format_task_list(reminders: list) -> str:
     """
     Helper function to format the task list string.
     """
-    priority_map = {0: "Low", 1: "Medium", 2: "High"}
+
     tasks = [
         f"⚫️ Task ID: {index + 1}\n"
         f"📝 Task: {reminder['message']}\n"
@@ -115,31 +121,65 @@ async def edit_menu(message: types.Message, task_id: str | ObjectId):
     await message.answer("Choose what you want to perform", reply_markup=keyboard)
 
 
-def change_status(message: types.Message, task_id: str | ObjectId, status: bool):
-    """
-    TODO: NEEDS implementation
-    TODO: Should be callback function
-    """
-    pass
-
-
-def change_priority(message: types.Message, task_id: str | ObjectId, priority: Priority):
-    """
-    Change task priority using the Priority Enum.
-    TODO: Should be callback function
-    """
-    pass
-
-
 async def status_manage_menu(message: types.Message, task_id: str | ObjectId):
     keyboard = creator.status_manage_menu(task_id)
     await message.answer(text="Choose wanted status", reply_markup=keyboard)
+
+
+@command_router.callback_query(lambda c: c.data.startswith("status_"))
+async def change_status(callback_query: types.CallbackQuery):
+    status = bool(callback_query.data.split("_")[1])
+    task_id = callback_query.data.split("_")[2]
+
+    await callback_query.message.delete()
+
+    result = await db.update_task_status(task_id, status)
+    if result:
+        await callback_query.message.answer("Task has been updated.")
+        await delete_task_request_menu(callback_query.message, task_id)
+
+
+async def delete_task_request_menu(message: types.Message, task_id: str | ObjectId):
+    keyboard = creator.delete_record_menu(task_id)
+    await message.answer("Choose if you want to delete the task", reply_markup=keyboard)
+
+
+@command_router.callback_query(lambda c: c.data.startswith("delete_"))
+async def delete_task(callback_query: types.CallbackQuery):
+    option = callback_query.data.split("_")[1]
+    await callback_query.message.delete()
+
+    if option == "exit":
+        await callback_query.message.answer("You are back in the main menu!\n")
+        return
+
+    await db.delete_task(option)
+    await callback_query.message.answer(f"Task has been deleted.\n"
+                                        f"You are back in the main menu!\n")
+    await callback_query.answer()
 
 
 async def priority_manage_menu(message: types.Message, task_id: str | ObjectId):
     keyboard = creator.priority_manage_menu(task_id)
     await message.answer(text="Choose wanted priority", reply_markup=keyboard)
 
+
+@command_router.callback_query(lambda c: c.data.startswith("priority_"))
+async def change_priority(callback_query: types.CallbackQuery):
+    priority = int(callback_query.data.split("_")[1])
+    task_id = callback_query.data.split("_")[2]
+
+    await callback_query.message.delete()
+
+    # await callback_query.message.answer(task_id, priority=priority) for DEBUGGING
+    result = await db.update_task_priority(task_id, priority)
+    if result:
+        await callback_query.message.answer(f"Task priority updated to {priority_map[priority]}\n"
+                                            "You are back in the main menu!")
+
+    else:
+        await callback_query.message.answer("Error has occurred try again later!")
+        await callback_query.message.answer("You are back in the main menu!\n")
 
 
 @command_router.callback_query(lambda c: c.data.startswith("edit_"))
@@ -178,7 +218,8 @@ async def process_menu_selection(callback_query: types.CallbackQuery):
     # Remove the message after it's been handled
     await callback_query.message.delete()
 
-    priority = get_priority_from_option(selected_option)
+    priority = get_priority_from_option(selected_option).value
+    print(priority)
 
     # Upload task to the database
     await db.add_reminder(int(user_id), int(chat_id), task_message, priority)
