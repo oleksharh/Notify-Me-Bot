@@ -1,8 +1,11 @@
 import certifi
 from motor.motor_asyncio import AsyncIOMotorClient
+from pymongo import ASCENDING
+
 from src.config import MONGODB_URI, DATABASE_NAME
 from bson import ObjectId
 from datetime import datetime
+
 
 # TODO: Add indexing on the most common attribute look up
 
@@ -16,6 +19,9 @@ class Database:
         self.client = AsyncIOMotorClient(MONGODB_URI, tlsCAFile=certifi.where())
         self.db = self.client[DATABASE_NAME]
         self.reminders_collection = self.db["reminders"]
+
+        await self.reminders_collection.create_index([("user_id", ASCENDING), ("chat_id", ASCENDING)],
+                                                     background=True)
 
     async def close(self):
         if self.client:
