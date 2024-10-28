@@ -1,7 +1,7 @@
 import certifi
 from motor.motor_asyncio import AsyncIOMotorClient
 from pymongo import ASCENDING
-
+from typing import Union
 from src.config import MONGODB_URI, DATABASE_NAME
 from bson import ObjectId
 from datetime import datetime
@@ -28,8 +28,8 @@ class Database:
             self.client.close()
 
     # Operations
-    async def get_task_status(self, task_id: ObjectId | str) -> str:
-        return await self.reminders_collection.find_one({"_id": ObjectId()})
+    async def get_task_status(self, task_id: Union[ObjectId, str]) -> str:
+        return await self.reminders_collection.find_one({"_id": ObjectId(task_id)})
 
     async def get_all_reminders(self):
         return await self.reminders_collection.find().to_list(length=None)
@@ -38,7 +38,7 @@ class Database:
         # TODO: return only usable in the functions attributes instead of the full record
         return await self.reminders_collection.find({"user_id": user_id, "chat_id": chat_id}).to_list(length=None)
 
-    async def get_reminder_by_id(self, task_id: str | ObjectId):
+    async def get_reminder_by_id(self, task_id: Union[str, ObjectId]):
         return await self.reminders_collection.find_one({"_id": ObjectId(task_id)})
 
     async def add_reminder(self, user_id: int, chat_id: int, message: str, priority: int) -> str:
@@ -59,7 +59,7 @@ class Database:
         await self.reminders_collection.delete_one({"_id": ObjectId(task_id)})
         return True
 
-    async def update_task_status(self, task_id: str | ObjectId, status: bool) -> bool:
+    async def update_task_status(self, task_id: Union[str, ObjectId], status: bool) -> bool:
         result = await self.reminders_collection.update_one(
             {"_id": ObjectId(task_id)},
             {"$set": {"status": status}}
@@ -67,12 +67,12 @@ class Database:
 
         return self.check_if_updated(result)
 
-    async def delete_task(self, task_id: str | ObjectId) -> bool:
+    async def delete_task(self, task_id: Union[str, ObjectId]) -> bool:
         result = await self.reminders_collection.delete_one({"_id": ObjectId(task_id)})
 
         return self.check_if_updated(result)
 
-    async def update_task_priority(self, task_id: str | ObjectId, priority: int) -> bool:
+    async def update_task_priority(self, task_id: Union[str, ObjectId], priority: int) -> bool:
         result = await self.reminders_collection.update_one(
             {"_id": ObjectId(task_id)},
             {"$set": {"priority": priority}}
