@@ -1,6 +1,7 @@
 from aiogram import types, Router, F
 from aiogram.filters import Command
 from bson import ObjectId
+from typing import Union
 from src.database.db_connect import db
 from src.utils.keyboards import MenuCreator
 from enum import Enum
@@ -118,12 +119,12 @@ async def edit_task(callback_query: types.CallbackQuery):
     await callback_query.answer()
 
 
-async def edit_menu(message: types.Message, task_id: str | ObjectId):
+async def edit_menu(message: types.Message, task_id: Union[str, ObjectId]):
     keyboard = creator.edit_menu(task_id)
     await message.answer("Choose what you want to perform", reply_markup=keyboard)
 
 
-async def status_manage_menu(message: types.Message, task_id: str | ObjectId):
+async def status_manage_menu(message: types.Message, task_id: Union[str, ObjectId]):
     keyboard = creator.status_manage_menu(task_id)
     await message.answer(text="Choose wanted status", reply_markup=keyboard)
 
@@ -147,7 +148,7 @@ async def change_status(callback_query: types.CallbackQuery):
     await callback_query.answer()
 
 
-async def delete_task_request_menu(message: types.Message, task_id: str | ObjectId):
+async def delete_task_request_menu(message: types.Message, task_id: Union[str, ObjectId]):
     keyboard = creator.delete_record_menu(task_id)
     await message.answer("Choose if you want to delete the task", reply_markup=keyboard)
 
@@ -167,7 +168,7 @@ async def delete_task(callback_query: types.CallbackQuery):
     await callback_query.answer()
 
 
-async def priority_manage_menu(message: types.Message, task_id: str | ObjectId):
+async def priority_manage_menu(message: types.Message, task_id: Union[str, ObjectId]):
     keyboard = creator.priority_manage_menu(task_id)
     await message.answer(text="Choose wanted priority", reply_markup=keyboard)
 

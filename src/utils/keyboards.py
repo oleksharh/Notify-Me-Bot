@@ -1,5 +1,6 @@
 from aiogram.types import InlineKeyboardMarkup, InlineKeyboardButton
 from bson import ObjectId
+from typing import Union
 
 
 class MenuCreator:
@@ -45,7 +46,7 @@ class MenuCreator:
         return MenuCreator.create_buttons(options, callback_format)
 
     @staticmethod
-    def edit_menu(task_id: str | ObjectId):
+    def edit_menu(task_id: Union[str, ObjectId]):
         options = [
             ("Manage Priority", f"priority_{task_id}"),
             ("Set task status", f"status_{task_id}")
@@ -54,7 +55,7 @@ class MenuCreator:
         return MenuCreator.create_buttons(options, callback_format)
 
     @staticmethod
-    def priority_manage_menu(task_id: str | ObjectId):
+    def priority_manage_menu(task_id: Union[str, ObjectId]):
         options = [
             ("Low", 0),
             ("Medium", 1),
@@ -64,7 +65,7 @@ class MenuCreator:
         return MenuCreator.create_buttons(options, callback_format)
 
     @staticmethod
-    def status_manage_menu(task_id: str | ObjectId):
+    def status_manage_menu(task_id: Union[str, ObjectId]):
         options = [
             ("Not Finished", "false"),
             ("Finished", "true")
@@ -73,7 +74,7 @@ class MenuCreator:
         return MenuCreator.create_buttons(options, callback_format)
 
     @staticmethod
-    def delete_record_menu(task_id: str | ObjectId):
+    def delete_record_menu(task_id: Union[str, ObjectId]):
         options = [
             ("🚪 Exit to the menu", "exit"),
             ("Delete Task", f"{task_id}"),
