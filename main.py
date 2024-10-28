@@ -1,11 +1,15 @@
 import asyncio
 import logging
-
 from aiogram import Bot, Dispatcher
-from config import BOT_TOKEN
-from handlers.commands import command_router
-from src.database.db_connect import  connect_db, close_db, db
-from utils.scheduled_tasks import ScheduledTasks
+from dotenv import load_dotenv
+
+# Load environment variables
+load_dotenv()
+
+from src.config import BOT_TOKEN
+from src.handlers.commands import command_router
+from src.database.db_connect import connect_db, close_db, db
+from src.utils.scheduled_tasks import ScheduledTasks
 
 # Configure logging
 logging.basicConfig(level=logging.INFO)
