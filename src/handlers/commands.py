@@ -136,7 +136,7 @@ async def change_status(callback_query: types.CallbackQuery):
 
     await callback_query.message.delete()
 
-    if status == bool(db.get_task_status(task_id)):
+    if status == bool(await db.get_task_status(task_id)):
         await callback_query.message.answer(f"Task already in this status!\n")
         return
 
