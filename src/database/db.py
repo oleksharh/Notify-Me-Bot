@@ -16,7 +16,7 @@ class Database:
         self.reminders_collection = None
 
     async def connect(self):
-        self.client = AsyncIOMotorClient(MONGODB_URI, tlsCAFile=certifi.where())
+        self.client = AsyncIOMotorClient(MONGODB_URI, tls=True, tlsCAFile=certifi.where())
         self.db = self.client[DATABASE_NAME]
         self.reminders_collection = self.db["reminders"]
 
