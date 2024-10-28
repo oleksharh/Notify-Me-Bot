@@ -54,7 +54,7 @@ def format_task_list(reminders: list) -> str:
     tasks = [
         f"⚫️ Task ID: {index + 1}\n"
         f"📝 Task: {reminder['message']}\n"
-        f"⭐️ Priority: {priority_map.get(reminder['priority'], "Unknown")}\n"
+        f"⭐️ Priority: {priority_map.get(reminder['priority'], 'Unknown')}\n"
         for index, reminder in enumerate(reminders)
     ]
     return "\n\n".join(tasks)
