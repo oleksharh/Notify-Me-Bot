@@ -81,3 +81,24 @@ class MenuCreator:
         ]
         callback_format = "delete_{}"
         return MenuCreator.create_buttons(options, callback_format)
+
+
+    @staticmethod
+    def user_config_options(user_id: int):
+        options = [
+            ("Default", "default"),
+            ("Configure", "configure"),
+        ]
+        callback_format = f"user_config_,{{}},{user_id}"
+        return MenuCreator.create_buttons(options, callback_format)
+
+    @staticmethod
+    def user_config():
+        options = [
+            ("Low", "low"),
+            ("Medium", "medium"),
+            ("High", "high"),
+            ("Ultra", "ultra"),
+        ]
+        callback_format = "config_{}"
+        return MenuCreator.create_buttons(options, callback_format)

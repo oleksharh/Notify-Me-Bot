@@ -1,10 +1,12 @@
 from aiogram import types, Router, F
 from aiogram.filters import Command
+# from aiohttp.web_routedef import options
 from bson import ObjectId
 from typing import Union
 from src.database.db_connect import db
 from src.utils.keyboards import MenuCreator
 from enum import Enum
+
 
 # TODO: generalize these status_manage_menu, delete_task_request_menu, priority_manage_menu into one callback_function
 # TODO: add error handling, especially in get_reminders, update_task_status, add_reminder
@@ -18,16 +20,35 @@ class Priority(Enum):
 
 priority_map = {0: "Low", 1: "Medium", 2: "High"}
 
-creator = MenuCreator()
+menu_creator = MenuCreator()
 command_router = Router(name="command_router")
 
 
 # Welcome command handler function
 @command_router.message(Command("start"))
 async def send_welcome(message: types.Message) -> None:
-    await message.reply("Stay organized with me! Just drop a message in the chat and I will sort it out for you!")
+    keyboard = menu_creator.user_config_options(message.from_user.id)
 
-    db.save_user_info()
+    await message.reply(
+        "Stay organized with me! But before we begin choose the configuration you want, the default one is:\n"
+        "Low Priority: once at 9am\n"
+        "Medium Priority: once at 9am and 1pm\n"
+        "High Priority: once at 9am and 1pm and 6pm\n"
+        "Ultra Priority: every hour from 9am till 11pm\n", reply_markup=keyboard)
+
+
+@command_router.callback_query(lambda c: c.data.startswith("user_config_"))
+async def user_config_handler(callback_query: types.CallbackQuery):
+    _, option, user_id = callback_query.data.split(",")
+
+    await callback_query.message.delete()
+
+    if option == "default":
+        await db.save_user_info(user_id)
+        await callback_query.message.answer("You are all set, stay organized with me!")
+        return
+
+
 
 # List All Tasks Command Handler
 @command_router.message(Command("list"))
@@ -42,7 +63,7 @@ async def send_list(message: types.Message) -> None:
         return
 
     tasks_str = format_task_list(reminders)
-    keyboard = creator.list_menu()
+    keyboard = menu_creator.list_menu()
 
     await message.answer(text="Your tasks are: \n\n" + tasks_str, reply_markup=keyboard)
 
@@ -93,7 +114,7 @@ async def manage_menu(message: types.Message, user_id=0, chat_id=0):
         await message.answer("No tasks available.")
         return
 
-    keyboard = creator.manage_menu(reminders)
+    keyboard = menu_creator.manage_menu(reminders)
     await message.answer("Here are your tasks. Choose one to edit:", reply_markup=keyboard)
 
 
@@ -120,12 +141,12 @@ async def edit_task(callback_query: types.CallbackQuery):
 
 
 async def edit_menu(message: types.Message, task_id: Union[str, ObjectId]):
-    keyboard = creator.edit_menu(task_id)
+    keyboard = menu_creator.edit_menu(task_id)
     await message.answer("Choose what you want to perform", reply_markup=keyboard)
 
 
 async def status_manage_menu(message: types.Message, task_id: Union[str, ObjectId]):
-    keyboard = creator.status_manage_menu(task_id)
+    keyboard = menu_creator.status_manage_menu(task_id)
     await message.answer(text="Choose wanted status", reply_markup=keyboard)
 
 
@@ -145,8 +166,9 @@ async def change_status(callback_query: types.CallbackQuery):
 
     await callback_query.answer()
 
+
 async def delete_task_request_menu(message: types.Message, task_id: Union[str, ObjectId]):
-    keyboard = creator.delete_record_menu(task_id)
+    keyboard = menu_creator.delete_record_menu(task_id)
     await message.answer("Choose if you want to delete the task", reply_markup=keyboard)
 
 
@@ -166,7 +188,7 @@ async def delete_task(callback_query: types.CallbackQuery):
 
 
 async def priority_manage_menu(message: types.Message, task_id: Union[str, ObjectId]):
-    keyboard = creator.priority_manage_menu(task_id)
+    keyboard = menu_creator.priority_manage_menu(task_id)
     await message.answer(text="Choose wanted priority", reply_markup=keyboard)
 
 
@@ -213,7 +235,7 @@ async def handle_user_input(message: types.Message):
 
     # After user input, display the inline menu
     await message.answer("Choose one of the following priorities:",
-                         reply_markup=creator.priority_menu(user_id, chat_id, user_input))
+                         reply_markup=menu_creator.priority_menu(user_id, chat_id, user_input))
 
 
 # Handle Priority Menu Selection

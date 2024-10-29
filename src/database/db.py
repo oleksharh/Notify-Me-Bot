@@ -35,7 +35,7 @@ class Database:
 
     # Operations
     async def save_user_info(self, user_id: int):
-        self.user_config.save_user_info(user_id)
+        await self.user_config.save_user_info(user_id)
 
     async def get_task_status(self, task_id: Union[ObjectId, str]) -> str:
         return await self.reminders_collection.find_one({"_id": ObjectId(task_id)})
