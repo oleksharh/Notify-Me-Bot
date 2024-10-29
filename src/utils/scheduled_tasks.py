@@ -11,17 +11,17 @@ class ScheduledTasks:
 
     def setup_tasks(self):
         # Send all priority levels at 10:00
-        @aiocron.crontab('0 10 * * *')
+        @aiocron.crontab('0 9 * * *')
         async def task_10():
             await self.send_reminders([0, 1, 2])
 
         # Send priority 1 and 2 at 15:00
-        @aiocron.crontab('0 15 * * *')
+        @aiocron.crontab('0 13 * * *')
         async def task_15():
             await self.send_reminders([1, 2])
 
         # Send priority 2 only at 20:00
-        @aiocron.crontab('0 20 * * *')
+        @aiocron.crontab('0 18 * * *')
         async def task_20():
             await self.send_reminders([2])
 

@@ -6,7 +6,6 @@ from src.database.db_connect import db
 from src.utils.keyboards import MenuCreator
 from enum import Enum
 
-
 # TODO: generalize these status_manage_menu, delete_task_request_menu, priority_manage_menu into one callback_function
 # TODO: add error handling, especially in get_reminders, update_task_status, add_reminder
 
@@ -27,7 +26,8 @@ command_router = Router(name="command_router")
 @command_router.message(Command("start"))
 async def send_welcome(message: types.Message) -> None:
     await message.reply("Stay organized with me! Just drop a message in the chat and I will sort it out for you!")
-# unnecessary
+
+    db.save_user_info()
 
 # List All Tasks Command Handler
 @command_router.message(Command("list"))
@@ -136,11 +136,13 @@ async def change_status(callback_query: types.CallbackQuery):
 
     await callback_query.message.delete()
 
+    if status == bool(await db.get_task_status(task_id)):
+        await callback_query.message.answer(f"Task already in this status!\n")
+        return
+
     result = await db.update_task_status(task_id, status)
     if result:
         await callback_query.message.answer("Task has been updated.")
-
-    if status:
         await delete_task_request_menu(callback_query.message, task_id)
 
     await callback_query.answer()

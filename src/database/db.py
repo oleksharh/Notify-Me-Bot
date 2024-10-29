@@ -5,6 +5,7 @@ from typing import Union
 from src.config import MONGODB_URI, DATABASE_NAME
 from bson import ObjectId
 from datetime import datetime
+from src.database.user_config import UserConfig
 
 
 # TODO: Add indexing on the most common attribute look up
@@ -14,12 +15,17 @@ class Database:
         self.client = None
         self.db = None
         self.reminders_collection = None
+        self.user_config = None
+        self.preferences_collection = None
 
     async def connect(self):
         self.client = AsyncIOMotorClient(MONGODB_URI, tls=True, tlsCAFile=certifi.where())
         self.db = self.client[DATABASE_NAME]
         self.reminders_collection = self.db["reminders"]
+        self.user_config = UserConfig(self.db)
+        self.preferences_collection = self.user_config.preferences_collection
 
+        await self.user_config.connect()
         await self.reminders_collection.create_index([("user_id", ASCENDING), ("chat_id", ASCENDING)],
                                                      background=True)
 
@@ -28,6 +34,9 @@ class Database:
             self.client.close()
 
     # Operations
+    async def save_user_info(self, user_id: int):
+        self.user_config.save_user_info(user_id)
+
     async def get_task_status(self, task_id: Union[ObjectId, str]) -> str:
         return await self.reminders_collection.find_one({"_id": ObjectId(task_id)})
 
