@@ -136,17 +136,14 @@ async def change_status(callback_query: types.CallbackQuery):
 
     await callback_query.message.delete()
 
-    if status == bool(await db.get_task_status(task_id)):
-        await callback_query.message.answer(f"Task already in this status!\n")
-        return
-
     result = await db.update_task_status(task_id, status)
     if result:
         await callback_query.message.answer("Task has been updated.")
+
+    if status:
         await delete_task_request_menu(callback_query.message, task_id)
 
     await callback_query.answer()
-
 
 async def delete_task_request_menu(message: types.Message, task_id: Union[str, ObjectId]):
     keyboard = creator.delete_record_menu(task_id)
