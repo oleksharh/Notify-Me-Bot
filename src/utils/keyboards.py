@@ -1,6 +1,6 @@
 from aiogram.types import InlineKeyboardMarkup, InlineKeyboardButton
 from bson import ObjectId
-from typing import Union
+from typing import Union, Tuple
 
 
 class MenuCreator:
@@ -8,19 +8,39 @@ class MenuCreator:
         pass
 
     @staticmethod
-    def create_buttons(options: list[tuple], callback_format: str) -> InlineKeyboardMarkup:
+    def create_buttons(options: list[Tuple[str, str]], callback_format: str, row_width: int = None) -> InlineKeyboardMarkup:
         """
         Generic function to create buttons from a list of options.
 
+        :param row_width: A width of a row (simply put that's how many buttons will be in line)
         :param options: A list of tuples where each tuple contains (text, callback_identifier).
         :param callback_format: The callback data format where the identifier will be inserted.
         :return: InlineKeyboardMarkup with generated buttons.
         """
-        buttons = [
-            [InlineKeyboardButton(text=text, callback_data=callback_format.format(callback_identifier))]
-            for text, callback_identifier in options
-        ]
-        return InlineKeyboardMarkup(inline_keyboard=buttons)
+        # buttons = []  # Initialize the button list
+        #
+        # # Create a row to hold buttons
+        # current_row = []
+        #
+        # for i, (text, callback_identifier) in enumerate(options):
+        #     # Create a button
+        #     button = InlineKeyboardButton(text=text, callback_data=callback_format.format(callback_identifier))
+        #
+        #     # Append button to the current row
+        #     current_row.append(button)
+        #
+        #     # If row_width is set and current row is full, add it to buttons and start a new row
+        #     if row_width is not None and (i + 1) % row_width == 0:
+        #         buttons.append(current_row)  # Add the current row to buttons
+        #         current_row = []  # Start a new row
+        #
+        # # Add the last row if it has any buttons
+        # if current_row:
+        #     buttons.append(current_row)
+        #
+        # return InlineKeyboardMarkup(inline_keyboard=buttons)
+        # TODO: FIX ABOVE METHOD
+
 
     @staticmethod
     def priority_menu(user_id, chat_id, message):
@@ -82,7 +102,6 @@ class MenuCreator:
         callback_format = "delete_{}"
         return MenuCreator.create_buttons(options, callback_format)
 
-
     @staticmethod
     def user_config_options(user_id: int):
         options = [
@@ -102,3 +121,22 @@ class MenuCreator:
         ]
         callback_format = "config_{}"
         return MenuCreator.create_buttons(options, callback_format)
+
+    @staticmethod
+    def times_config():
+        options = []
+
+        # Generate options for each hour, with three options per row
+        for i in range(0, 24, 3):
+            row = []
+            for j in range(3):
+                hour = i + j
+                if hour < 24:  # Ensure the hour is valid
+                    row.append((f"{hour}:00", f"{hour}"))
+            options.append(row)
+
+        flat_options = [item for sublist in options for item in sublist]
+
+        # Create buttons using the existing create_buttons method
+        return MenuCreator.create_buttons(flat_options, "times_config_{}")
+

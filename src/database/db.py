@@ -25,10 +25,6 @@ class Database:
         self.user_config = UserConfig(self.db)
         self.preferences_collection = self.user_config.preferences_collection
 
-        await self.user_config.connect()
-        await self.reminders_collection.create_index([("user_id", ASCENDING), ("chat_id", ASCENDING)],
-                                                     background=True)
-
     async def close(self):
         if self.client:
             self.client.close()

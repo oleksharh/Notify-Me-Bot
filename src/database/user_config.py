@@ -25,9 +25,6 @@ class UserConfig:
                     "reminder_times": reminder_time,
                 })
 
-    async def connect(self):
-        await self.preferences_collection.create_index("user_id", background=True)
-
     async def update_user_preference(self, user_id: int, priority: int, reminder_time: List[list]) -> str:
         """
         Save or update the user's preferred

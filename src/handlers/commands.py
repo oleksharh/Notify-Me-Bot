@@ -1,6 +1,5 @@
 from aiogram import types, Router, F
 from aiogram.filters import Command
-# from aiohttp.web_routedef import options
 from bson import ObjectId
 from typing import Union
 from src.database.db_connect import db
@@ -16,7 +15,6 @@ class Priority(Enum):
     LOW = 0
     MEDIUM = 1
     HIGH = 2
-
 
 priority_map = {0: "Low", 1: "Medium", 2: "High"}
 
@@ -48,7 +46,12 @@ async def user_config_handler(callback_query: types.CallbackQuery):
         await callback_query.message.answer("You are all set, stay organized with me!")
         return
 
+    keyboard = menu_creator.times_config()
+    await callback_query.message.answer("Choose time", reply_markup=keyboard)
 
+
+def get_user_preferences():
+    return menu_creator.times_config()
 
 # List All Tasks Command Handler
 @command_router.message(Command("list"))
