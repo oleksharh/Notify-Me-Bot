@@ -210,6 +210,11 @@ async def handle_user_input(message: types.Message):
     user_input = message.text
     user_id = message.from_user.id
     chat_id = message.chat.id
+    
+    #TODO: store the info above immediately without passing to the callback data,
+    # and then in list functions strip off to 64bit size to fit inline buttons
+    # and check for all possible mistakes with inserting info to the db
+    # and passing less params in callback data
 
     # After user input, display the inline menu
     await message.answer("Choose one of the following priorities:",
