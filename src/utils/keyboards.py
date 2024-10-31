@@ -8,7 +8,7 @@ class MenuCreator:
         pass
 
     @staticmethod
-    def create_buttons(options: list[Tuple[str, str]], callback_format: str, row_width: int = None) -> InlineKeyboardMarkup:
+    def create_buttons(options: list[Tuple[str, Union[str, int]]], callback_format: str, row_width: int = None) -> InlineKeyboardMarkup:
         """
         Generic function to create buttons from a list of options.
 
@@ -43,13 +43,13 @@ class MenuCreator:
 
 
     @staticmethod
-    def priority_menu(user_id, chat_id, message):
+    def priority_menu(object_id: Union[str, ObjectId]) -> InlineKeyboardMarkup:
         options = [
             ("Low", 1),
             ("Medium", 2),
             ("High", 3)
         ]
-        callback_format = f"option_{{}},{user_id},{chat_id},{message}"
+        callback_format = f"option_{{}},{object_id}"
         return MenuCreator.create_buttons(options, callback_format)
 
     @staticmethod
