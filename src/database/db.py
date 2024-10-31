@@ -41,7 +41,7 @@ class Database:
     async def get_reminder_by_id(self, task_id: Union[str, ObjectId]):
         return await self.reminders_collection.find_one({"_id": ObjectId(task_id)})
 
-    async def add_reminder(self, user_id: int, chat_id: int, message: str, priority: int) -> str:
+    async def add_reminder(self, user_id: int, chat_id: int, message: str, priority: int | None) -> str:
         new_record = {
             "user_id": user_id,
             "chat_id": chat_id,

@@ -23,13 +23,13 @@ class MenuCreator:
         return InlineKeyboardMarkup(inline_keyboard=buttons)
 
     @staticmethod
-    def priority_menu(user_id, chat_id, message):
+    def priority_menu(object_id: Union[str, ObjectId]) -> InlineKeyboardMarkup:
         options = [
             ("Low", 1),
             ("Medium", 2),
             ("High", 3)
         ]
-        callback_format = f"option_{{}},{user_id},{chat_id},{message}"
+        callback_format = f"option_{{}},{object_id}"
         return MenuCreator.create_buttons(options, callback_format)
 
     @staticmethod

@@ -210,7 +210,10 @@ async def handle_user_input(message: types.Message):
     user_input = message.text
     user_id = message.from_user.id
     chat_id = message.chat.id
-    
+
+    inserted_id = await db.add_reminder(user_id, chat_id, user_input, None)
+    print(type(inserted_id))
+
     #TODO: store the info above immediately without passing to the callback data,
     # and then in list functions strip off to 64bit size to fit inline buttons
     # and check for all possible mistakes with inserting info to the db
@@ -218,13 +221,13 @@ async def handle_user_input(message: types.Message):
 
     # After user input, display the inline menu
     await message.answer("Choose one of the following priorities:",
-                         reply_markup=creator.priority_menu(user_id, chat_id, user_input))
+                         reply_markup=creator.priority_menu(inserted_id))
 
 
 # Handle Priority Menu Selection
 @command_router.callback_query(lambda c: c.data.startswith("option_"))
 async def process_menu_selection(callback_query: types.CallbackQuery):
-    selected_option, user_id, chat_id, task_message = callback_query.data.split(",")
+    selected_option, object_id = callback_query.data.split(",")
 
     # Remove the message after it's been handled
     await callback_query.message.delete()
@@ -233,7 +236,7 @@ async def process_menu_selection(callback_query: types.CallbackQuery):
     print(priority)
 
     # Upload task to the database
-    await db.add_reminder(int(user_id), int(chat_id), task_message, priority)
+    await db.update_task_priority(object_id, priority)
 
     await callback_query.answer()
     await callback_query.message.answer("Your task was uploaded to the DB")
