@@ -1,7 +1,6 @@
 import certifi
 from motor.motor_asyncio import AsyncIOMotorClient
-from pymongo import ASCENDING
-from typing import Union
+from typing import Union, List
 from src.config import MONGODB_URI, DATABASE_NAME
 from bson import ObjectId
 from datetime import datetime
@@ -32,6 +31,9 @@ class Database:
     # Operations
     async def save_user_info(self, user_id: int):
         await self.user_config.save_user_info(user_id)
+
+    async def update_user_preferences(self, user_id: int, priority: int, reminder_time: List[list]):
+        await self.user_config.update_user_preferences(user_id, priority, reminder_time)
 
     async def get_task_status(self, task_id: Union[ObjectId, str]) -> str:
         return await self.reminders_collection.find_one({"_id": ObjectId(task_id)})
@@ -84,6 +86,8 @@ class Database:
         )
 
         return self.check_if_updated(result)
+
+
 
     @staticmethod
     def check_if_updated(result) -> bool:

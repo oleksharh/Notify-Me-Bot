@@ -16,6 +16,7 @@ class Priority(Enum):
     MEDIUM = 1
     HIGH = 2
 
+
 priority_map = {0: "Low", 1: "Medium", 2: "High"}
 
 menu_creator = MenuCreator()
@@ -46,12 +47,41 @@ async def user_config_handler(callback_query: types.CallbackQuery):
         await callback_query.message.answer("You are all set, stay organized with me!")
         return
 
-    keyboard = menu_creator.times_config()
-    await callback_query.message.answer("Choose time", reply_markup=keyboard)
+    keyboard = menu_creator.dayparts()
+    await callback_query.message.answer("Choose part of the day you would like to edit", reply_markup=keyboard)
 
 
-def get_user_preferences():
-    return menu_creator.times_config()
+@command_router.callback_query(lambda c: c.data.startswith("daypart_"))
+async def daypart_handler(callback_query: types.CallbackQuery):
+    daypart = callback_query.data.split("_")[-1]
+
+    await callback_query.message.delete()
+
+    if daypart == "exit":
+        await callback_query.message.answer("You are back in the main menu! \n"
+                                            "POP in your message and we will sort it out for you")
+
+    daypart = int(daypart)
+
+    daypart_map = {0: (0, 12), 1: (12, 18), 2: (18, 24), 3: "SPECIAL CASE"}
+    daypart_words = {0: "morning", 1: "afternoon", 2: "evening", 3: "SPECIAL CASE"}
+
+    start, end = daypart_map[daypart]
+    keyboard = menu_creator.times_config(start, end, daypart)
+    await callback_query.message.answer(f"Choose time for the {daypart_words[daypart]}", reply_markup=keyboard)
+
+
+@command_router.callback_query(lambda c: c.data.startswith("times_config_"))
+def get_user_preferences(callback_query: types.CallbackQuery):
+    _, _, hour, daypart = callback_query.data.split("_")
+    hour = int(hour)
+    daypart = int(daypart)
+
+    db.update_user_preferences(hour, daypart)
+    # TODO: fix the function above, update update_user_preferences method to process hours in the way of
+    # deriving time from previous attributes, record and refine its structure in the collection for the optimized querying
+
+
 
 # List All Tasks Command Handler
 @command_router.message(Command("list"))
@@ -239,7 +269,7 @@ async def handle_user_input(message: types.Message):
     inserted_id = await db.add_reminder(user_id, chat_id, user_input, None)
     print(type(inserted_id))
 
-    #TODO: store the info above immediately without passing to the callback data,
+    # TODO: store the info above immediately without passing to the callback data,
     # and then in list functions strip off to 64bit size to fit inline buttons
     # and check for all possible mistakes with inserting info to the db
     # and passing less params in callback data

@@ -1,6 +1,6 @@
 from aiogram.types import InlineKeyboardMarkup, InlineKeyboardButton
 from bson import ObjectId
-from typing import Union, Tuple
+from typing import Union, Tuple, List
 
 
 class MenuCreator:
@@ -112,6 +112,7 @@ class MenuCreator:
     @staticmethod
     def user_config():
         options = [
+            ("Back to the main menu", "exit"),
             ("Low", "low"),
             ("Medium", "medium"),
             ("High", "high"),
@@ -121,20 +122,32 @@ class MenuCreator:
         return MenuCreator.create_buttons(options, callback_format)
 
     @staticmethod
-    def times_config():
+    def dayparts():
+        options = [
+            ("Back to the main menu", "exit"),
+            ("Morning", 0),
+            ("Afternoon", 1),
+            ("Evening", 2),
+            ("Ultra", 3),
+        ]
+
+        callback_format = "daypart_{}"
+        return MenuCreator.create_buttons(options, callback_format, 2)
+
+    @staticmethod
+    def times_config(hr_from: int, hr_to: int, daypart: int):
+        """
+        :param daypart: part of the day that was chosen in the dayparts function.
+        :param hr_from: hour that count will start from.
+        :param hr_to: hour that count will end at (Excluding the hr_to, so will show on the buttons hr_to - 1).
+        :return: InlineKeyboardMarkup with buttons inside it.
+        """
         options = []
 
         # Generate options for each hour, with three options per row
-        for i in range(0, 24, 3):
-            row = []
-            for j in range(3):
-                hour = i + j
-                if hour < 24:  # Ensure the hour is valid
-                    row.append((f"{hour}:00", f"{hour}"))
-            options.append(row)
-
-        flat_options = [item for sublist in options for item in sublist]
+        for hour in range(hr_from, hr_to, 1):
+            options.append((f"{hour}:00", f"{hour}_{daypart}"))
 
         # Create buttons using the existing create_buttons method
-        return MenuCreator.create_buttons(flat_options, "times_config_{}", 4)
+        return MenuCreator.create_buttons(options, "times_config_{}", 4)
 
