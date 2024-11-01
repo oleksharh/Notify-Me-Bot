@@ -17,29 +17,27 @@ class MenuCreator:
         :param callback_format: The callback data format where the identifier will be inserted.
         :return: InlineKeyboardMarkup with generated buttons.
         """
-        # buttons = []  # Initialize the button list
-        #
-        # # Create a row to hold buttons
-        # current_row = []
-        #
-        # for i, (text, callback_identifier) in enumerate(options):
-        #     # Create a button
-        #     button = InlineKeyboardButton(text=text, callback_data=callback_format.format(callback_identifier))
-        #
-        #     # Append button to the current row
-        #     current_row.append(button)
-        #
-        #     # If row_width is set and current row is full, add it to buttons and start a new row
-        #     if row_width is not None and (i + 1) % row_width == 0:
-        #         buttons.append(current_row)  # Add the current row to buttons
-        #         current_row = []  # Start a new row
-        #
-        # # Add the last row if it has any buttons
-        # if current_row:
-        #     buttons.append(current_row)
-        #
-        # return InlineKeyboardMarkup(inline_keyboard=buttons)
-        # TODO: FIX ABOVE METHOD
+        buttons = []
+        current_row = []
+
+        for text, callback_identifier in options:
+            # Create button with callback data
+            button = InlineKeyboardButton(text=text, callback_data=callback_format.format(callback_identifier))
+            current_row.append(button)
+
+            # Add row when it reaches the row_width limit
+            if row_width and len(current_row) == row_width:
+                buttons.append(current_row)
+                current_row = []
+
+        # Add remaining buttons in columns if no row_width, or as the last row
+        if current_row:
+            if row_width:
+                buttons.append(current_row)
+            else:
+                buttons.extend([[button] for button in current_row])
+
+        return InlineKeyboardMarkup(inline_keyboard=buttons)
 
 
     @staticmethod
@@ -138,5 +136,5 @@ class MenuCreator:
         flat_options = [item for sublist in options for item in sublist]
 
         # Create buttons using the existing create_buttons method
-        return MenuCreator.create_buttons(flat_options, "times_config_{}")
+        return MenuCreator.create_buttons(flat_options, "times_config_{}", 4)
 
