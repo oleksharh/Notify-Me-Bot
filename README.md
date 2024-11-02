@@ -8,7 +8,7 @@
 - **Task Management Commands:** 
   - **/manage** – Update or delete tasks easily.
   - **/list** – View all active tasks and reminders at a glance.
-- **Priority-based Reminders:** Set reminders from `low` (morning only) to `ultra` (hourly) to fit your schedule.
+- **Priority-based Reminders:** Set reminders from `low` (morning only) to `ultra` (hourly) to fit your schedule (currently only up to high priority (sends reminders at 10, 15, 20)).
 
 > **Try it out!** The bot is live on Telegram. Start managing your tasks with [@notifyy_mebot](https://t.me/notifyy_mebot).
 
