@@ -1,5 +1,7 @@
 # NotifyMe Bot
-<img src="https://github.com/oleksharh/Notify-Me-Bot/blob/main/assets/notify-me-bot-avatar.jpg" alt="Bot Profile Picture" width="200" />
+<div align="center">
+    <img src="https://github.com/oleksharh/Notify-Me-Bot/blob/main/assets/notify-me-bot-avatar.jpg" alt="Bot Profile Picture" width="300" />
+</div>
 
 **NotifyMe Bot** is a simple Telegram reminder bot designed to keep you on track with persistent notifications. Simply type your reminder message, and a menu will guide you to set up the task as you like. The bot will continue reminding you until you mark the task as completed.
 
