@@ -26,6 +26,8 @@ command_router = Router(name="command_router")
 @command_router.message(Command("start"))
 async def send_welcome(message: types.Message) -> None:
     await message.reply("Stay organized with me! Just drop a message in the chat and I will sort it out for you!")
+
+
 # unnecessary
 
 # List All Tasks Command Handler
@@ -213,11 +215,10 @@ async def handle_user_input(message: types.Message):
 
     inserted_id = await db.add_reminder(user_id, chat_id, user_input, None)
     print(type(inserted_id))
-
-    #TODO: store the info above immediately without passing to the callback data,
-    # and then in list functions strip off to 64bit size to fit inline buttons
-    # and check for all possible mistakes with inserting info to the db
-    # and passing less params in callback data
+    if inserted_id == "limit":
+        await message.answer("Sorry your limit is up, we are not capable of saving more stuff"
+                             " from you at the moment, as we use free hosting services with limited capacity")
+        return
 
     # After user input, display the inline menu
     await message.answer("Choose one of the following priorities:",
