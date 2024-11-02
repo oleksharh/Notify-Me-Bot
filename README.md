@@ -37,7 +37,10 @@ The bot is currently hosted, but if you’d like to host it yourself or modify i
 3. **Set Up Environment Variables:**
    - Create a `.env` file and add your bot token from [BotFather](https://core.telegram.org/bots#botfather).
     ```
-    BOT_TOKEN=your_bot_token_here
+    TELEGRAM_BOT_TOKEN=your_bot_token_here
+    MONGODB_URI=your_mongoDB_URI
+    DATABASE_NAME=your_db_name
+    EXEMPT_USER_IDS=user_ids that have no limitations
     ```
 4. **Run the Bot:**
     ```bash
