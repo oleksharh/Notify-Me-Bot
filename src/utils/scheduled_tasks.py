@@ -36,8 +36,8 @@ class ScheduledTasks:
         for reminder in filtered_reminders:
             try:
                 await self.bot.send_message(
-                    chat_id=reminder['chat_id'],
+                    chat_id=reminder['user_id'],
                     text=f"Reminder: {reminder['message']}"
                 )
             except Exception as e:
-                print(f"Failed to send reminder to chat_id {reminder['chat_id']}: {e}")
+                print(f"Failed to send reminder to chat_id(user_id) {reminder['user_id']}: {e}")

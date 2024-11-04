@@ -4,20 +4,13 @@ from bson import ObjectId
 from typing import Union
 from src.database.db_connect import db
 from src.utils.keyboards import MenuCreator
-from enum import Enum
 
 
 # TODO: generalize these status_manage_menu, delete_task_request_menu, priority_manage_menu into one callback_function
 # TODO: add error handling, especially in get_reminders, update_task_status, add_reminder
 
 
-class Priority(Enum):
-    LOW = 0
-    MEDIUM = 1
-    HIGH = 2
-
-
-priority_map = {0: "Low", 1: "Medium", 2: "High"}
+priority_map = {"low": 0, "medium": 1, "high": 2, "ultra": 3}
 
 menu_creator = MenuCreator()
 command_router = Router(name="command_router")
@@ -43,7 +36,7 @@ async def user_config_handler(callback_query: types.CallbackQuery):
     await callback_query.message.delete()
 
     if option == "default":
-        await db.save_user_info(user_id)
+        await db.save_user_info(user_id, "timezone") # TODO ADD IMPLEMENTATION OF GETTING TIMEZONE FROM USER
         await callback_query.message.answer("You are all set, stay organized with me!")
         return
 
@@ -60,6 +53,7 @@ async def daypart_handler(callback_query: types.CallbackQuery):
     if daypart == "exit":
         await callback_query.message.answer("You are back in the main menu! \n"
                                             "POP in your message and we will sort it out for you")
+        return
 
     daypart = int(daypart)
 
@@ -87,9 +81,8 @@ def get_user_preferences(callback_query: types.CallbackQuery):
 @command_router.message(Command("list"))
 async def send_list(message: types.Message) -> None:
     user_id = message.from_user.id
-    chat_id = message.chat.id
 
-    reminders = await db.get_reminders(user_id, chat_id)
+    reminders = await db.get_reminders(user_id)
 
     if not reminders:
         await message.answer("You are all set, all tasks are finished!")
@@ -109,7 +102,7 @@ def format_task_list(reminders: list) -> str:
     tasks = [
         f"⚫️ Task ID: {index + 1}\n"
         f"📝 Task: {reminder['message']}\n"
-        f"⭐️ Priority: {priority_map.get(reminder['priority'], 'Unknown')}\n"
+        f"⭐️ Priority: {reminder['priority']}\n"
         for index, reminder in enumerate(reminders)
     ]
     return "\n\n".join(tasks)
@@ -119,14 +112,13 @@ def format_task_list(reminders: list) -> str:
 @command_router.callback_query(lambda c: c.data.startswith("list_"))
 async def list_manage(callback_query: types.CallbackQuery):
     user_id = callback_query.from_user.id
-    chat_id = callback_query.message.chat.id
     function = callback_query.data.split("_")[-1]
 
     # Remove inline keyboard after selection
     await callback_query.message.edit_reply_markup(reply_markup=None)
 
     if function == "manage":
-        await manage_menu(callback_query.message, user_id, chat_id)
+        await manage_menu(callback_query.message, user_id)
     else:
         await callback_query.message.answer("You are back in the main menu!\n"
                                             "Please enter your next task.")
@@ -136,12 +128,11 @@ async def list_manage(callback_query: types.CallbackQuery):
 
 # Manage Menu Command Handler
 @command_router.message(Command("manage"))
-async def manage_menu(message: types.Message, user_id=0, chat_id=0):
-    if user_id == 0 and chat_id == 0:
+async def manage_menu(message: types.Message, user_id=0):
+    if user_id == 0:
         user_id = message.from_user.id
-        chat_id = message.chat.id
 
-    reminders = await db.get_reminders(user_id, chat_id)
+    reminders = await db.get_reminders(user_id)
 
     if not reminders:
         await message.answer("No tasks available.")
@@ -227,7 +218,7 @@ async def priority_manage_menu(message: types.Message, task_id: Union[str, Objec
 
 @command_router.callback_query(lambda c: c.data.startswith("priority_"))
 async def change_priority(callback_query: types.CallbackQuery):
-    priority = int(callback_query.data.split("_")[1])
+    priority = callback_query.data.split("_")[1]
     task_id = callback_query.data.split("_")[2]
 
     await callback_query.message.delete()
@@ -235,7 +226,7 @@ async def change_priority(callback_query: types.CallbackQuery):
     # await callback_query.message.answer(task_id, priority=priority) for DEBUGGING
     result = await db.update_task_priority(task_id, priority)
     if result:
-        await callback_query.message.answer(f"Task priority updated to {priority_map[priority]}\n"
+        await callback_query.message.answer(f"Task priority updated to {priority}\n"
                                             "You are back in the main menu!")
 
     else:
@@ -264,9 +255,9 @@ async def edit_task(callback_query: types.CallbackQuery):
 async def handle_user_input(message: types.Message):
     user_input = message.text
     user_id = message.from_user.id
-    chat_id = message.chat.id
 
-    inserted_id = await db.add_reminder(user_id, chat_id, user_input, None)
+
+    inserted_id = await db.add_reminder(user_id, user_input, None)
     print(type(inserted_id))
 
     if inserted_id == "limit":
@@ -287,12 +278,13 @@ async def handle_user_input(message: types.Message):
 # Handle Priority Menu Selection
 @command_router.callback_query(lambda c: c.data.startswith("option_"))
 async def process_menu_selection(callback_query: types.CallbackQuery):
-    selected_option, object_id = callback_query.data.split(",")
+    priority, object_id = callback_query.data.split(",")
+
+    priority = priority.split("_")[-1]
 
     # Remove the message after it's been handled
     await callback_query.message.delete()
 
-    priority = get_priority_from_option(selected_option).value
     print(priority)
 
     # Upload task to the database
@@ -300,14 +292,3 @@ async def process_menu_selection(callback_query: types.CallbackQuery):
 
     await callback_query.answer()
     await callback_query.message.answer("Your task was uploaded to the DB")
-
-
-def get_priority_from_option(option: str) -> Priority:
-    """
-    Helper function to map option strings to priority enum values.
-    """
-    return {
-        "option_1": Priority.LOW,
-        "option_2": Priority.MEDIUM,
-        "option_3": Priority.HIGH
-    }.get(option, Priority.HIGH)  # Default to High priority if unrecognized

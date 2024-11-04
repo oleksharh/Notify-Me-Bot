@@ -15,25 +15,23 @@ class Database:
         self.db = None
         self.reminders_collection = None
         self.user_config = None
-        self.preferences_collection = None
 
     async def connect(self):
         self.client = AsyncIOMotorClient(MONGODB_URI, tls=True, tlsCAFile=certifi.where())
         self.db = self.client[DATABASE_NAME]
         self.reminders_collection = self.db["reminders"]
         self.user_config = UserConfig(self.db)
-        self.preferences_collection = self.user_config.preferences_collection
 
     async def close(self):
         if self.client:
             self.client.close()
 
     # Operations
-    async def save_user_info(self, user_id: int):
-        await self.user_config.save_user_info(user_id)
+    async def save_user_info(self, user_id: int, timezone: str):
+        await self.user_config.save_user_info(user_id, timezone)
 
-    async def update_user_preferences(self, user_id: int, priority: int, reminder_time: List[list]):
-        await self.user_config.update_user_preferences(user_id, priority, reminder_time)
+    async def update_user_configs(self, user_id: int, priority: str, reminder_time: List[list]):
+        await self.user_config.update_user_configs(user_id, priority, reminder_time)
 
     async def get_task_status(self, task_id: Union[ObjectId, str]) -> str:
         return await self.reminders_collection.find_one({"_id": ObjectId(task_id)})
@@ -41,14 +39,14 @@ class Database:
     async def get_all_reminders(self):
         return await self.reminders_collection.find().to_list(length=None)
 
-    async def get_reminders(self, user_id: int, chat_id: int):
+    async def get_reminders(self, user_id: int):
         # TODO: return only usable in the functions attributes instead of the full record
-        return await self.reminders_collection.find({"user_id": user_id, "chat_id": chat_id}).to_list(length=None)
+        return await self.reminders_collection.find({"user_id": user_id}).to_list(length=None)
 
     async def get_reminder_by_id(self, task_id: Union[str, ObjectId]):
         return await self.reminders_collection.find_one({"_id": ObjectId(task_id)})
 
-    async def add_reminder(self, user_id: int, chat_id: int, message: str, priority: Union[int, None]) -> str:
+    async def add_reminder(self, user_id: int, message: str, priority: Union[str, None]) -> str:
         record_count = await self.reminders_collection.count_documents({"user_id": user_id})
         print(record_count)
         if record_count > MAX_REMINDERS_PER_USER and user_id != EXEMPT_USER_IDS:
@@ -56,10 +54,9 @@ class Database:
 
         new_record = {
             "user_id": user_id,
-            "chat_id": chat_id,
             "message": message,
             "priority": priority,
-            "status": False,
+            "is_finished": False,
             "timestamp": datetime.now()
         }
 
@@ -84,7 +81,7 @@ class Database:
 
         return self.check_if_updated(result)
 
-    async def update_task_priority(self, task_id: Union[str, ObjectId], priority: int) -> bool:
+    async def update_task_priority(self, task_id: Union[str, ObjectId], priority: str) -> bool:
         result = await self.reminders_collection.update_one(
             {"_id": ObjectId(task_id)},
             {"$set": {"priority": priority}}

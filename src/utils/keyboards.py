@@ -39,13 +39,22 @@ class MenuCreator:
 
         return InlineKeyboardMarkup(inline_keyboard=buttons)
 
+    @staticmethod
+    def user_config_options(user_id: int):
+        options = [
+            ("Default", "default"),
+            ("Configure", "configure"),
+        ]
+        callback_format = f"user_config_,{{}},{user_id}"
+        return MenuCreator.create_buttons(options, callback_format, 2)
 
     @staticmethod
     def priority_menu(object_id: Union[str, ObjectId]) -> InlineKeyboardMarkup:
         options = [
-            ("Low", 1),
-            ("Medium", 2),
-            ("High", 3)
+            ("Low", "low"),
+            ("Medium", "medium"),
+            ("High", "high"),
+            ("Ultra", "ultra"),
         ]
         callback_format = f"option_{{}},{object_id}"
         return MenuCreator.create_buttons(options, callback_format)
@@ -100,14 +109,7 @@ class MenuCreator:
         callback_format = "delete_{}"
         return MenuCreator.create_buttons(options, callback_format)
 
-    @staticmethod
-    def user_config_options(user_id: int):
-        options = [
-            ("Default", "default"),
-            ("Configure", "configure"),
-        ]
-        callback_format = f"user_config_,{{}},{user_id}"
-        return MenuCreator.create_buttons(options, callback_format)
+
 
     @staticmethod
     def user_config():
