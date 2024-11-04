@@ -269,6 +269,11 @@ async def handle_user_input(message: types.Message):
     inserted_id = await db.add_reminder(user_id, chat_id, user_input, None)
     print(type(inserted_id))
 
+    if inserted_id == "limit":
+        await message.answer("Sorry your limit is up, we are not capable of saving more stuff"
+                             " from you at the moment, as we use free hosting services with limited capacity")
+        return
+
     # TODO: store the info above immediately without passing to the callback data,
     # and then in list functions strip off to 64bit size to fit inline buttons
     # and check for all possible mistakes with inserting info to the db

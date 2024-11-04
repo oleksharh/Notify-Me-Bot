@@ -1,7 +1,7 @@
 import certifi
 from motor.motor_asyncio import AsyncIOMotorClient
 from typing import Union, List
-from src.config import MONGODB_URI, DATABASE_NAME
+from src.config import MONGODB_URI, DATABASE_NAME, EXEMPT_USER_IDS, MAX_REMINDERS_PER_USER
 from bson import ObjectId
 from datetime import datetime
 from src.database.user_config import UserConfig
@@ -48,7 +48,12 @@ class Database:
     async def get_reminder_by_id(self, task_id: Union[str, ObjectId]):
         return await self.reminders_collection.find_one({"_id": ObjectId(task_id)})
 
-    async def add_reminder(self, user_id: int, chat_id: int, message: str, priority: int | None) -> str:
+    async def add_reminder(self, user_id: int, chat_id: int, message: str, priority: Union[int, None]) -> str:
+        record_count = await self.reminders_collection.count_documents({"user_id": user_id})
+        print(record_count)
+        if record_count > MAX_REMINDERS_PER_USER and user_id != EXEMPT_USER_IDS:
+            return "limit"
+
         new_record = {
             "user_id": user_id,
             "chat_id": chat_id,

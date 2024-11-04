@@ -1,6 +1,6 @@
 from aiogram.types import InlineKeyboardMarkup, InlineKeyboardButton
 from bson import ObjectId
-from typing import Union, Tuple, List
+from typing import Union, Tuple
 
 
 class MenuCreator:
