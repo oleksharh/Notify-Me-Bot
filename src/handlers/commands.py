@@ -11,6 +11,8 @@ from src.utils.keyboards import MenuCreator
 
 
 priority_map = {"low": 0, "medium": 1, "high": 2, "ultra": 3}
+priority_map_reverse = {0: "low", 1: "medium", 2: "high", 3: "ultra"}
+priority_map_words = {0: "Morning", 1: "Afternoon", 2: "Evening", 3: "Ultra"}
 
 menu_creator = MenuCreator()
 command_router = Router(name="command_router")
@@ -20,6 +22,8 @@ command_router = Router(name="command_router")
 @command_router.message(Command("start"))
 async def send_welcome(message: types.Message) -> None:
     keyboard = menu_creator.user_config_options(message.from_user.id)
+
+    print(message.date, type(message.date))
 
     await message.reply(
         "Stay organized with me! But before we begin choose the configuration you want, the default one is:\n"
@@ -34,6 +38,8 @@ async def user_config_handler(callback_query: types.CallbackQuery):
     _, option, user_id = callback_query.data.split(",")
 
     await callback_query.message.delete()
+
+    await db.save_user_info(int(user_id),"timezone")
 
     if option == "default":
         await db.save_user_info(user_id, "timezone") # TODO ADD IMPLEMENTATION OF GETTING TIMEZONE FROM USER
@@ -66,12 +72,22 @@ async def daypart_handler(callback_query: types.CallbackQuery):
 
 
 @command_router.callback_query(lambda c: c.data.startswith("times_config_"))
-def get_user_preferences(callback_query: types.CallbackQuery):
+async def get_user_preferences(callback_query: types.CallbackQuery):
     _, _, hour, daypart = callback_query.data.split("_")
     hour = int(hour)
     daypart = int(daypart)
+    user_id = callback_query.from_user.id
 
-    db.update_user_preferences(hour, daypart)
+    await callback_query.message.delete()
+
+    print(hour, daypart, user_id)
+
+    await db.update_user_configs(user_id, priority_map_reverse[daypart], hour)
+
+    keyboard = menu_creator.dayparts()
+    await callback_query.message.answer(f"Your time for {priority_map_words[daypart].lower()} was updated")
+    await callback_query.message.answer("Choose part of the day you would like to edit", reply_markup=keyboard)
+
     # TODO: fix the function above, update update_user_preferences method to process hours in the way of
     # deriving time from previous attributes, record and refine its structure in the collection for the optimized querying
 

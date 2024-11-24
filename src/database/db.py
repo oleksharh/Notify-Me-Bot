@@ -30,7 +30,7 @@ class Database:
     async def save_user_info(self, user_id: int, timezone: str):
         await self.user_config.save_user_info(user_id, timezone)
 
-    async def update_user_configs(self, user_id: int, priority: str, reminder_time: List[list]):
+    async def update_user_configs(self, user_id: int, priority: str, reminder_time: int):
         await self.user_config.update_user_configs(user_id, priority, reminder_time)
 
     async def get_task_status(self, task_id: Union[ObjectId, str]) -> str:
@@ -88,7 +88,6 @@ class Database:
         )
 
         return self.check_if_updated(result)
-
 
 
     @staticmethod

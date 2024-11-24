@@ -33,7 +33,7 @@ class UserConfig:
             finally:
                 return "Not Successful"
 
-    async def update_user_configs(self, user_id: int, priority: str, reminder_time: List[list]) -> str:
+    async def update_user_configs(self, user_id: int, priority: str, reminder_time: int) -> str:
         """
         Save or update the user's preferred
         reminder time for a given priority
@@ -41,7 +41,7 @@ class UserConfig:
 
         result = await self.user_configs.update_one(
             {"user_id": user_id},
-            {"$set": {"custom_priority_times": {f"{priority}": reminder_time}}},
+            {"$set": {f"custom_priority_times.{priority}": reminder_time}},
             upsert=True
         )
         return str(result.upserted_id) if result.upserted_id else "Updated"
